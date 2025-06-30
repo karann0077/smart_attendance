@@ -1,6 +1,6 @@
 #  Smart Attendance System
 
-A smart and modern attendance system using **face recognition** via webcam. Built with **Flask**, **OpenCV**, and **face_recognition**, it allows you to upload employee photos, take attendance in real time, and view results in a clean dashboard.
+A smart and modern attendance system using **face recognition** via webcam. Built with **Flask**, **OpenCV**, and **face_recognition**, it allows you to upload employee photos, take attendance in real time, and view records in a clean dashboard.
 
 ---
 
@@ -31,7 +31,7 @@ A smart and modern attendance system using **face recognition** via webcam. Buil
 - Flask
 - OpenCV
 - face_recognition (uses dlib)
-- HTML / CSS / JavaScript
+- HTML / CSS / JavaScript for frontend
 
 ---
 
