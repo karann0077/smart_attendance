@@ -1,4 +1,3 @@
-cmake
 flask
 opencv-python
 face_recognition
