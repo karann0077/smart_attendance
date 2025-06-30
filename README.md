@@ -60,4 +60,4 @@ Then open your broswer and go to -
 http://127.0.0.1:5000/
 ```
 
-Your live face setection smart attendance system is ready to use 
+Your live face detection smart attendance system is ready to use 
