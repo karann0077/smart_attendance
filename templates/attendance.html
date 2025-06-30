@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Attendance Records - Smart Dashboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      animation: fadeInDown 0.8s ease-out;
+    }
+
+    .header h1 {
+      font-size: 2.8rem;
+      font-weight: 700;
+      color: white;
+      text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      margin-bottom: 10px;
+      letter-spacing: -1px;
+    }
+
+    .header p {
+      color: rgba(255,255,255,0.9);
+      font-size: 1.1rem;
+      font-weight: 300;
+    }
+
+    .controls-card {
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      animation: fadeInUp 0.8s ease-out 0.2s both;
+    }
+
+    .controls {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .form-group {
+      flex: 1;
+      min-width: 250px;
+      position: relative;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #4a5568;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    select {
+      width: 100%;
+      padding: 15px 20px;
+      font-size: 1rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      background: white;
+      color: #2d3748;
+      transition: all 0.3s ease;
+      appearance: none;
+      background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6,9 12,15 18,9"></polyline></svg>');
+      background-repeat: no-repeat;
+      background-position: right 15px center;
+      background-size: 16px;
+      cursor: pointer;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      transform: translateY(-2px);
+    }
+
+    select:hover {
+      border-color: #cbd5e0;
+      transform: translateY(-1px);
+    }
+
+    .load-btn {
+      padding: 15px 30px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      position: relative;
+      overflow: hidden;
+      min-width: 120px;
+    }
+
+    .load-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .load-btn:hover::before {
+      left: 100%;
+    }
+
+    .load-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+    }
+
+    .load-btn:active {
+      transform: translateY(0);
+    }
+
+    .load-btn.loading {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    .load-btn.loading::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      margin: -10px 0 0 -10px;
+      border: 2px solid transparent;
+      border-top: 2px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .records-card {
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      animation: fadeInUp 0.8s ease-out 0.4s both;
+      min-height: 400px;
+    }
+
+    .records-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 25px 30px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .records-header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 100%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      animation: shimmer 3s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(180deg); }
+    }
+
+    .records-header h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      position: relative;
+      z-index: 1;
+    }
+
+    .records-header .date-info {
+      font-size: 0.9rem;
+      opacity: 0.9;
+      margin-top: 5px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .records-content {
+      padding: 0;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    .records-content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .records-content::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+
+    .records-content::-webkit-scrollbar-thumb {
+      background: #cbd5e0;
+      border-radius: 3px;
+    }
+
+    .records-content::-webkit-scrollbar-thumb:hover {
+      background: #a0aec0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      background: #f8fafc;
+      color: #4a5568;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 20px 30px;
+      text-align: left;
+      border-bottom: 2px solid #e2e8f0;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    td {
+      padding: 20px 30px;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: middle;
+      transition: all 0.3s ease;
+    }
+
+    tr {
+      transition: all 0.3s ease;
+    }
+
+    tr:hover {
+      background: linear-gradient(90deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+      transform: scale(1.01);
+    }
+
+    .name-cell {
+      display: flex;
+      align-items: center;
+      font-weight: 500;
+      color: #2d3748;
+    }
+
+    .profile-pic {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 15px;
+      border: 3px solid #e2e8f0;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .profile-pic:hover {
+      transform: scale(1.1);
+      border-color: #667eea;
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    .time-cell {
+      font-family: 'Courier New', monospace;
+      font-weight: 600;
+      color: #4c51bf;
+      background: rgba(102, 126, 234, 0.1);
+      padding: 8px 15px;
+      border-radius: 20px;
+      display: inline-block;
+      min-width: 100px;
+      text-align: center;
+    }
+
+    .no-data {
+      text-align: center;
+      padding: 60px 30px;
+      color: #718096;
+      font-size: 1.1rem;
+      position: relative;
+    }
+
+    .no-data::before {
+      content: '📅';
+      display: block;
+      font-size: 3rem;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+
+    .stats-bar {
+      background: #f8fafc;
+      padding: 20px 30px;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+      color: #4a5568;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stat-number {
+      font-weight: 700;
+      color: #667eea;
+      font-size: 1.2rem;
+    }
+
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .record-row {
+      animation: slideInLeft 0.5s ease-out backwards;
+    }
+
+    @keyframes slideInLeft {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 15px;
+      }
+
+      .header h1 {
+        font-size: 2.2rem;
+      }
+
+      .controls {
+        flex-direction: column;
+      }
+
+      .form-group {
+        min-width: 100%;
+      }
+
+      .controls-card,
+      .records-content {
+        padding: 20px;
+      }
+
+      th, td {
+        padding: 15px 20px;
+      }
+
+      .profile-pic {
+        width: 40px;
+        height: 40px;
+      }
+
+      table {
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Attendance Records</h1>
+      <p>Smart Employee Attendance Management System</p>
+    </div>
+
+    <div class="controls-card">
+      <div class="controls">
+        <div class="form-group">
+          <label for="dateSelect">Select Date</label>
+          <select id="dateSelect">
+            <option value="">Choose a date to view records...</option>
+          </select>
+        </div>
+        <button class="load-btn" id="loadBtn">
+          <span class="btn-text">Load Records</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="records-card">
+      <div class="records-header">
+        <h2>Attendance Report</h2>
+        <div class="date-info" id="dateInfo">Select a date to view attendance records</div>
+      </div>
+      <div class="records-content" id="recordsContainer">
+        <div class="no-data">
+          Please select a date above to view attendance records.
+          <br><br>
+          <small>The system will display employee check-in times and profile information.</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentRecords = [];
+
+    async function loadDates() {
+      try {
+        const res = await fetch('/api/attendance/all');
+        const data = await res.json();
+        const select = document.getElementById('dateSelect');
+        
+   
+        select.innerHTML = '<option value="">Choose a date to view records...</option>';
+        
+        data.forEach(item => {
+          const opt = document.createElement('option');
+          opt.value = item.date;
+          opt.textContent = formatDate(item.date);
+          select.appendChild(opt);
+        });
+      } catch (error) {
+        console.error('Error loading dates:', error);
+        showError('Failed to load available dates');
+      }
+    }
+
+    async function loadRecords(date) {
+      try {
+        const res = await fetch(`/api/attendance?date=${date}`);
+        if (!res.ok) throw new Error('Failed to fetch records');
+        return await res.json();
+      } catch (error) {
+        console.error('Error loading records:', error);
+        showError('Failed to load attendance records');
+        return [];
+      }
+    }
+
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    }
+
+    function formatTime(timeStr) {
+      try {
+        const [hours, minutes] = timeStr.split(':');
+        const date = new Date();
+        date.setHours(parseInt(hours), parseInt(minutes));
+        return date.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        });
+      } catch {
+        return timeStr;
+      }
+    }
+
+    function render(records, selectedDate) {
+      const container = document.getElementById('recordsContainer');
+      const dateInfo = document.getElementById('dateInfo');
+      
+      if (selectedDate) {
+        dateInfo.textContent = `Records for ${formatDate(selectedDate)}`;
+      }
+      
+      if (!records || records.length === 0) {
+        container.innerHTML = `
+          <div class="no-data">
+            No attendance records found for this date.
+            <br><br>
+            <small>Try selecting a different date or check if employees have checked in.</small>
+          </div>
+        `;
+        return;
+      }
+
+      currentRecords = records;
+      
+      const sortedRecords = records.sort((a,b) => a.time.localeCompare(b.time));
+      
+      const rows = sortedRecords
+        .map((r, index) => `
+          <tr class="record-row" style="animation-delay: ${index * 0.1}s">
+            <td class="name-cell">
+              <img class="profile-pic" 
+                   src="/known_faces/${r.name}.jpg" 
+                   alt="${r.name}"
+                   onerror="this.src='data:image/svg+xml,<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 100 100\\'><circle cx=\\'50\\' cy=\\'50\\' r=\\'40\\' fill=\\'%23e2e8f0\\'/><text x=\\'50\\' y=\\'55\\' text-anchor=\\'middle\\' font-size=\\'16\\' fill=\\'%234a5568\\'>${r.name.charAt(0)}</text></svg>'" />
+              ${r.name}
+            </td>
+            <td>
+              <span class="time-cell">${formatTime(r.time)}</span>
+            </td>
+          </tr>
+        `)
+        .join('');
+      
+      container.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Employee</th>
+              <th>Check-in Time</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div class="stats-bar">
+          <div class="stat-item">
+            <span>📊 Total Present:</span>
+            <span class="stat-number">${records.length}</span>
+          </div>
+          <div class="stat-item">
+            <span>⏰ Latest Check-in:</span>
+            <span class="stat-number">${records.length > 0 ? formatTime(Math.max(...records.map(r => r.time))) : 'N/A'}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function showError(message) {
+      const container = document.getElementById('recordsContainer');
+      container.innerHTML = `
+        <div class="no-data" style="color: #e53e3e;">
+          ⚠️ ${message}
+          <br><br>
+          <small>Please try again or contact system administrator.</small>
+        </div>
+      `;
+    }
+
+    function setLoading(isLoading) {
+      const btn = document.getElementById('loadBtn');
+      const btnText = btn.querySelector('.btn-text');
+      
+      if (isLoading) {
+        btn.classList.add('loading');
+        btnText.textContent = 'Loading...';
+        btn.disabled = true;
+      } else {
+        btn.classList.remove('loading');
+        btnText.textContent = 'Load Records';
+        btn.disabled = false;
+      }
+    }
+
+    document.getElementById('loadBtn').addEventListener('click', async () => {
+      const date = document.getElementById('dateSelect').value;
+      if (!date) {
+        alert('Please select a date first.');
+        return;
+      }
+      
+      setLoading(true);
+      try {
+        const records = await loadRecords(date);
+        render(records, date);
+      } finally {
+        setLoading(false);
+      }
+    });
+
+ 
+    document.getElementById('dateSelect').addEventListener('change', async (e) => {
+      if (e.target.value) {
+        setLoading(true);
+        try {
+          const records = await loadRecords(e.target.value);
+          render(records, e.target.value);
+        } finally {
+          setLoading(false);
+        }
+      }
+    });
+
+    window.addEventListener('DOMContentLoaded', loadDates);
+  </script>
+</body>
+</html>
