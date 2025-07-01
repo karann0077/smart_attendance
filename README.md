@@ -8,7 +8,7 @@ A smart and modern attendance system using **face recognition** via webcam. Buil
 
 - 🔍 Add employees by uploading face images
 - 📷 Take attendance using webcam face recognition
-- 🧾 Save attendance in **JSON** and **Excel** formats
+- 🧾 Save attendance in **JSON**  formats
 - 🗓 View past records by selecting a date
 - 🧑 Shows employee name, photo, and check-in time
 - 💡 Simple, responsive UI with modern look
